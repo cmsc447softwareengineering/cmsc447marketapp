@@ -1,0 +1,6 @@
+<html>
+<form action="/djangotest/createuser" method="post">
+{% csrf_token %}
+{{form }}
+</form>
+</html>

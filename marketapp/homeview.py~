@@ -1,0 +1,69 @@
+import textwrap
+
+from django.http import HttpResponse
+from django.views.generic.base import View
+
+
+class HomePageView(View):
+
+	def dispatch(request, *args, **kwargs):
+		meh = "sdktjk " + type(request)
+		response_text = textwrap.dedent('''\
+            <html>
+            <head>
+                <title>Greetings to the world</title>
+            </head>
+            <body>
+                <h1>Greetings to the world</h1>
+                <p>Hello, world!</p>
+            </body>
+			<h1>%s</h1>
+            </html>
+        ''')
+		return HttpResponse(meh)
+
+class CreateUserView(View):
+
+	def dispatch(request, *args, **kwargs):
+
+		if (False):
+			response_text = "<html>This is the post data:\n\n"
+			#response_text += request.POST
+			response_text += "\n\n</html>"
+			response = HttpResponse(response_text)
+			response.set_cookie("keyjunk",value='valuejunk',
+								max_age=None,expires=None,path='/djangotest/createuser',
+								domain='fake.com',secure=None,
+								httponly=False )
+		else:
+			response_text = textwrap.dedent('''\
+<html>
+<head>
+HWELLLO
+	</head>
+<body>
+<h1>Create User</h1>
+<form method="POST" action="/djangotest/createuser">
+	{% csrf_token %}
+	Username: <input type="text" name="httpd_username" value="" />
+ 	Password: <input type="password" name="httpd_password" value="" />
+	<input type="submit" name="login" value="Login" />
+</form>
+
+</body>
+</html>''')
+		response = HttpResponse(response_text)
+		return HttpResponse(response)
+
+
+
+
+
+
+
+
+
+
+
+
+

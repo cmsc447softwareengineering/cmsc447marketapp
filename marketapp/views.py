@@ -1,4 +1,6 @@
 import textwrap
+import random
+import datetime
 
 from django.http import HttpResponse
 from django.views.generic.base import View
@@ -7,6 +9,7 @@ from .forms import LoginForm
 from django.shortcuts import render
 from django.shortcuts import redirect
 from models import userModel
+from models import userSession
 from django.core.mail import send_mail
 
 class HomePageView(View):
@@ -59,7 +62,18 @@ class LoginView(View):
 								password = request.POST['password'])
 				if (u.checkUserExists()[0]):
 					if (u.checkPassword()):
-						return redirect('/djangotest/feed')
+						#TODO this sucks hashes same random thing
+						random.seed(request.POST['password'])
+						tok = random.randint(1,9999999999)
+						#########################################
+						usersesh = userSession(umbc_id = request.POST['umbcid'], token = tok)
+						result = usersesh.createEntry()
+						if (result != 1):
+							return HttpResponse("<html>Failed to create session %s</html>"% result)
+						request.session['token'] = tok
+						request.session['id'] = u.umbc_id
+						return HttpResponse("<html><h1>%s</h1></html>" % str(request.session['token']))
+						#return redirect('/djangotest/feed')
 					#wrong password					
 					else:
 						return HttpResponse("<html><h1>Wrong password try again</h1></html>")
@@ -74,6 +88,15 @@ class LoginView(View):
 class MainFeedView(View):
 	
 	def dispatch(self, request, *args, **kwargs):
+		try:
+			u = userSession(umbc_id=request.session['id'], token=request.session['token'])
+		except:
+			return HttpResponse("<html>User not logged in</html>")
+			
+		if (u.checkLogin() == 1):
+			return HttpResponse("<html>User logged in: </html>")
+		return HttpResponse("<html>User not logged in</html>")
+
 		return render(request, 'marketapp/feed.html')
 
 

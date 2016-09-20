@@ -99,7 +99,10 @@ class productModel(models.Model):
 
 	#this is like java's toString
 	def __str__(self):
-		return 'Title: ' + self.title + ' Good or Service: ' + self.goodorservice + ' Price: ' + self.price + ' Owner: ' + self.owner
+		return 'Title: ' + self.title + \
+				' Good or Service: ' + self.goodorservice + \
+				' Price: ' + self.price + \
+				' Owner: ' + self.owner
 
 
 
@@ -108,7 +111,42 @@ class productModel(models.Model):
 ###############################################################
 
 class userSession(models.Model):
-	umbc_id =  models.CharField(max_length=7)
+	umbc_id = models.CharField(max_length=7, primary_key=True)
+	token = models.CharField(max_length=64)
+	created = models.DateTimeField(auto_now_add=True)
+	def createEntry(self):
+		self.clean()
+		ErrorMsg = ''
+		try:
+			w = userSession.objects.get(umbc_id = self.umbc_id)
+		except ObjectDoesNotExist as detail:
+			ErrorMsg += str(detail)
+			self.save()
+			return 1
+		except:
+			ErrorMsg += "Different Error occured."
+			return ErrorMsg
+		#delete old entry overwrite with fresher session
+		w.delete()
+		self.save()
+		return 1
+
+
+	def checkLogin(self):
+		try:
+			w = userSession.objects.get(umbc_id = self.umbc_id)
+		except ObjectDoesNotExist as detail:
+			return "User is not signed in."
+		except ValueError as detail:
+			return "A Value error occured. %s" % detail			
+		except:
+			return "A different error occured."
+		if (str(w.token) == str(self.token)):
+			return 1
+		return "looked up " + str(w.token) + ' checked with ' + str(self.token)
+
+	def __str__(self):
+		return "UmbcId: " + self.umbc_id + ' Token: ' + self.token + ' Time created: ' + str(self.created)
 	
 
 

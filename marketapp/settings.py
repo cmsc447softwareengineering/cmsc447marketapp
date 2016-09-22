@@ -57,7 +57,7 @@ WSGI_APPLICATION = 'marketapp.wsgi.application'
 TEMPLATES = [
 	{
 		'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['/home/nulp/code/django/marketapp/marketapp/templates/marketapp'],
         'APP_DIRS': True,
         'OPTIONS': {
             # ... some options here ...

@@ -14,11 +14,13 @@ from models import userSession
 from models import productModel
 from django.core.mail import send_mail
 from django.utils.html import mark_safe
+from django.template.loader import render_to_string
 #from django.core.exceptions import MultiValueDictKeyError
 
 class HomePageView(View):
 
 	def dispatch(self, request, *args, **kwargs):
+		return redirect('/djangotest/feed')
 		response_text = textwrap.dedent('''\
             <html>
             <head>
@@ -94,9 +96,7 @@ class MainFeedView(View):
 	#for debug purpose shold be in models.py
 	def getAllContent(self):
 		stuff = productModel.objects.all()
-		s = []
-		for e in stuff:
-			s.append(e.title)
+
 		return stuff
 	
 	def dispatch(self, request, *args, **kwargs):
@@ -108,7 +108,8 @@ class MainFeedView(View):
 			u = userSession(umbc_id=request.session['id'], token=request.session['token'])
 		except:
 			#If no cookie present they're not logged in
-			return render(request, 'marketapp/feed.html', {'results': stuff,'signinlink': mark_safe('<a href="login">login here</a>')})
+			ns = render_to_string('a.html')
+			return render(request, 'marketapp/feed.html', {'results': stuff, 'notsignedinchunk': ns})#,'signinlink': mark_safe('<a href="login">login here</a>')})
 		
 		#adding content	
 		if (request.method == 'POST'):
@@ -117,8 +118,6 @@ class MainFeedView(View):
 				#TODO Django's checkbox is stupid sets 'on' for True and throws errors on False 
 				try:
 					g = request.POST['goodorservice']
-				#except MultiValueDictKeyError:
-				#	g = False
 				except:
 					g = False
 				if g == 'on':
@@ -130,17 +129,20 @@ class MainFeedView(View):
 					pm = productModel(title=request.POST['title'],  goodorservice=g, description=request.POST['description'], price=request.POST['price'], owner=request.session['id'])
 					pm.createEntry()
 					stuff = self.getAllContent() #update newly added thing
-			
+		
 			addform = addGoodForm()
-			return render(request, 'marketapp/feed.html', {'results': stuff,'form': addform})		
+			si = render_to_string('signedin.html', {'form': addform}, request=request)
+			return render(request, 'marketapp/feed.html', {'results': stuff, 'signedinchunk': si})		
 
 		#Logged in Get request
 		if (u.checkLogin() == 1):
 			addform = addGoodForm()
-			return render(request, 'marketapp/feed.html', {'results': stuff,'form': addform})
+			si = render_to_string('signedin.html', {'form': addform}, request=request)
+			return render(request, 'marketapp/feed.html', {'results': stuff, 'signedinchunk': si})
 	
 		#Has Cookie but not valid
-		return render(request, 'marketapp/feed.html', {'results': stuff,'signinlink': mark_safe('<a href="login">login here</a>')})
+		ns = render_to_string('a.html')
+		return render(request, 'marketapp/feed.html', {'results': stuff,'notsignedinchunk': ns})#,'signinlink': mark_safe('<a href="login">login here</a>')})
 
 
 

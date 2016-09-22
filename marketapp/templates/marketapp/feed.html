@@ -1,3 +1,25 @@
 <html>
-<h1>This is where content would be</h1>
+<h1>Umbc Retreiver Market</h1>
+<a href="createuser">Signup here</a>
+{% autoescape on %}
+{{ signinlink }}
+{% endautoescape %}
+<form action="/djangotest/feed" method="post">
+{% csrf_token %}
+{{ form }}
+<input type="submit" name="Add Stuff!"/>
+</form>
+<table>
+<tr>
+<th>Title</th><th>Description</th><th>Price</th><th>Poster</th>
+</tr>
+{%for r in results%}
+<tr>
+<td>{{r.title}}</td>
+<td>{{r.description}}</td>
+<td>{{r.price}}</td>
+<td>{{r.owner}}</td>
+</tr>
+{% endfor %}
+</table>
 </html>

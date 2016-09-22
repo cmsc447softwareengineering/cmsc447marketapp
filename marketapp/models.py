@@ -90,19 +90,25 @@ class userModel(models.Model):
 ###############################################################
 class productModel(models.Model):
 	title = models.CharField(max_length=64)
-	goodorservice = models.BooleanField()
+	goodorservice = models.BooleanField() # true for a good
 	description = models.CharField(max_length=255)
 	price = models.FloatField(max_length=64)
 	owner = models.CharField(max_length=7)
 	#picture = models.ImageField(upload_to=None)
 
+	def createEntry(self):
+		self.clean()
+		self.save()
+		return
+	def getAll(self):
+		return productModel.objects.all()
 
 	#this is like java's toString
 	def __str__(self):
-		return 'Title: ' + self.title + \
-				' Good or Service: ' + self.goodorservice + \
-				' Price: ' + self.price + \
-				' Owner: ' + self.owner
+		return 'Title: ' + str(self.title) + \
+				' Good or Service: ' + str(self.goodorservice) + \
+				' Price: ' + str(self.price) + \
+				' Owner: ' + str(self.owner)
 
 
 

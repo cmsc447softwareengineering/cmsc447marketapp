@@ -6,11 +6,15 @@ from django.http import HttpResponse
 from django.views.generic.base import View
 from .forms import SignUpForm
 from .forms import LoginForm
+from .forms import addGoodForm
 from django.shortcuts import render
 from django.shortcuts import redirect
 from models import userModel
 from models import userSession
+from models import productModel
 from django.core.mail import send_mail
+from django.utils.html import mark_safe
+#from django.core.exceptions import MultiValueDictKeyError
 
 class HomePageView(View):
 
@@ -70,6 +74,7 @@ class LoginView(View):
 						result = usersesh.createEntry()
 						if (result != 1):
 							return HttpResponse("<html>Failed to create session %s</html>"% result)
+						#Else success!
 						request.session['token'] = tok
 						request.session['id'] = u.umbc_id
 						return HttpResponse("<html><h1>%s</h1></html>" % str(request.session['token']))
@@ -80,27 +85,66 @@ class LoginView(View):
 				#wrong username
 				else:
 					return HttpResponse("<html><h1>Wrong User Name</h1></html>")
-					
+		#Its a Get request			
 		else:
 			form = LoginForm()
 		return render(request, 'marketapp/login.html', {'form':form})
 
 class MainFeedView(View):
+	#for debug purpose shold be in models.py
+	def getAllContent(self):
+		stuff = productModel.objects.all()
+		s = []
+		for e in stuff:
+			s.append(e.title)
+		return stuff
 	
 	def dispatch(self, request, *args, **kwargs):
+		#Get Content
+		stuff = self.getAllContent()
+
+		#Get session info
 		try:
 			u = userSession(umbc_id=request.session['id'], token=request.session['token'])
 		except:
-			return HttpResponse("<html>User not logged in</html>")
+			#If no cookie present they're not logged in
+			return render(request, 'marketapp/feed.html', {'results': stuff,'signinlink': mark_safe('<a href="login">login here</a>')})
+		
+		#adding content	
+		if (request.method == 'POST'):
+			if (u.checkLogin() == 1):
+				goodform = addGoodForm(request.POST)
+				#TODO Django's checkbox is stupid sets 'on' for True and throws errors on False 
+				try:
+					g = request.POST['goodorservice']
+				#except MultiValueDictKeyError:
+				#	g = False
+				except:
+					g = False
+				if g == 'on':
+					g = True
+				#invalid data sent
+				else:
+					g = False
+				if (goodform.is_valid()):
+					pm = productModel(title=request.POST['title'],  goodorservice=g, description=request.POST['description'], price=request.POST['price'], owner=request.session['id'])
+					pm.createEntry()
+					stuff = self.getAllContent() #update newly added thing
 			
+			addform = addGoodForm()
+			return render(request, 'marketapp/feed.html', {'results': stuff,'form': addform})		
+
+		#Logged in Get request
 		if (u.checkLogin() == 1):
-			return HttpResponse("<html>User logged in: </html>")
-		return HttpResponse("<html>User not logged in</html>")
+			addform = addGoodForm()
+			return render(request, 'marketapp/feed.html', {'results': stuff,'form': addform})
+	
+		#Has Cookie but not valid
+		return render(request, 'marketapp/feed.html', {'results': stuff,'signinlink': mark_safe('<a href="login">login here</a>')})
 
-		return render(request, 'marketapp/feed.html')
 
 
-
+			
 
 
 

@@ -1,5 +1,6 @@
 import textwrap
 import random
+import os
 import datetime
 
 from django.http import HttpResponse
@@ -68,10 +69,8 @@ class LoginView(View):
 								password = request.POST['password'])
 				if (u.checkUserExists()[0]):
 					if (u.checkPassword()):
-						#TODO this sucks hashes same random thing
-						random.seed(request.POST['password'])
-						tok = random.randint(1,9999999999)
-						#########################################
+						t = os.urandom(64)
+						tok = t.encode('base-64')
 						usersesh = userSession(umbc_id = request.POST['umbcid'], token = tok)
 						result = usersesh.createEntry()
 						if (result != 1):
@@ -79,8 +78,8 @@ class LoginView(View):
 						#Else success!
 						request.session['token'] = tok
 						request.session['id'] = u.umbc_id
-						return HttpResponse("<html><h1>%s</h1></html>" % str(request.session['token']))
-						#return redirect('/djangotest/feed')
+						#return HttpResponse("<html><h1>%s</h1></html>" % str(request.session['token']))
+						return redirect('/djangotest/feed')
 					#wrong password					
 					else:
 						return HttpResponse("<html><h1>Wrong password try again</h1></html>")

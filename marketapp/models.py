@@ -1,6 +1,10 @@
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
+import datetime
+import re
+from datetime import timedelta
 
+p = re.compile('[A-Z][A-Z][0-9][0-9][0-9][0-9][0-9]')
 
 
 class userModel(models.Model):
@@ -59,11 +63,11 @@ class userModel(models.Model):
 #######checkUserExists######################
 
 #######checkIdisValid#######################
-	#TODO implement regex to verify ID is valid
 	def checkIdisValid(self):
 		ErrorMsg = ""
-		if(False):
-			#assert(umbcid == r'[A-Z][A-Z][0-9][0-9][0-9][0-9][0-9]')
+		s = str(self.umbc_id)
+		s = s.upper()	
+		if(None == re.match(p,s)):
 			ErrorMsg += "The umbcID provided was not valid. "
 			return [False, ErrorMsg]
 		else:
@@ -149,6 +153,10 @@ class userSession(models.Model):
 			return "A different error occured."
 		if (str(w.token) == str(self.token)):
 			return 1
+		#TODO figure out how to check for old session
+		#	if( not (datetime.datetime.now() - w.created > datetime.timedelta(days=1))) 
+		#		return 1
+		#	return 0
 		return "looked up " + str(w.token) + ' checked with ' + str(self.token)
 
 	def __str__(self):

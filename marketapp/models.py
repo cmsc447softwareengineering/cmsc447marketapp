@@ -13,6 +13,8 @@ class userModel(models.Model):
 	email = models.CharField(max_length=64)
 	umbc_id = models.CharField(max_length=7, primary_key=True)
 	verified = models.BooleanField()
+	#TODO implement rating
+	#rating = models.IntegerField()
 	
 	def createEntry(self):
 		self.clean()

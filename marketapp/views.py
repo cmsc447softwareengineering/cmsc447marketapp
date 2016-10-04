@@ -18,6 +18,10 @@ from django.utils.html import mark_safe
 from django.template.loader import render_to_string
 #from django.core.exceptions import MultiValueDictKeyError
 
+#TODO implement Logout, delete entries, admin system
+#TODO transaction verification system
+#TODO Buying functionality 
+
 class HomePageView(View):
 
 	def dispatch(self, request, *args, **kwargs):
@@ -131,7 +135,18 @@ class MainFeedView(View):
 		
 			addform = addGoodForm()
 			si = render_to_string('signedin.html', {'form': addform}, request=request)
-			return render(request, 'marketapp/feed.html', {'results': stuff, 'signedinchunk': si})		
+			return render(request, 'marketapp/feed.html', {'results': stuff, 'signedinchunk': si})
+
+		#If user clicked buy an item load only the item on feed
+		p = request.GET.get('item','')		
+		if ( p != ''):
+			for e in stuff:
+				if int(e.id) == int(p):
+					t = e
+					stuff = []
+					stuff.append(t)
+					break
+
 
 		#Logged in Get request
 		if (u.checkLogin() == 1):

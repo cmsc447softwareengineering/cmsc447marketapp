@@ -25,7 +25,7 @@ from django.template.loader import render_to_string
 class HomePageView(View):
 
 	def dispatch(self, request, *args, **kwargs):
-		return redirect('/djangotest/feed')
+		return redirect('/feed')
 
 class CreateUserView(View):
 
@@ -70,7 +70,7 @@ class LoginView(View):
 						request.session['token'] = tok
 						request.session['id'] = u.umbc_id
 						#return HttpResponse("<html><h1>%s</h1></html>" % str(request.session['token']))
-						return redirect('/djangotest/feed')
+						return redirect('/feed')
 					#wrong password					
 					else:
 						return HttpResponse("<html><h1>Wrong password try again</h1></html>")

@@ -13,7 +13,7 @@ urlpatterns = [ #patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-	url(r'^$', HomePageView.as_view(), name='home'),
+	url(r'^$', MainFeedView.as_view(), name='home'),
 	url(r'^createuser', CreateUserView.as_view(), name='usercreate'),
 	url(r'^feed', MainFeedView.as_view(), name='feed'),
 	url(r'^login', LoginView.as_view(), name='login'),

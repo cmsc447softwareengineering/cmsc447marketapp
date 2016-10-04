@@ -26,19 +26,6 @@ class HomePageView(View):
 
 	def dispatch(self, request, *args, **kwargs):
 		return redirect('/djangotest/feed')
-		response_text = textwrap.dedent('''\
-            <html>
-            <head>
-                <title>Greetings to the world</title>
-            </head>
-            <body>
-                <h1>Greetings to the world</h1>
-                <p>Hello, world!</p>
-            </body>
-			<h1>%s</h1>
-			</html>
-		''')
-		return HttpResponse(response_text)
 
 class CreateUserView(View):
 
@@ -158,6 +145,13 @@ class MainFeedView(View):
 		ns = render_to_string('a.html')
 		return render(request, 'marketapp/feed.html', {'results': stuff,'notsignedinchunk': ns})#,'signinlink': mark_safe('<a href="login">login here</a>')})
 
+
+class adminView(View):
+	#for debug purpose shold be in models.py
+	def getAllContent(self):
+		stuff = productModel.objects.all()
+	def dispatch(self, request, *args, **kwargs):
+		pass
 
 
 			

@@ -90,6 +90,9 @@ class MainFeedView(View):
 		return stuff
 	
 	def dispatch(self, request, *args, **kwargs):
+		userse = userSession.objects.get(pk='aa12345')
+		
+		return HttpResponse("<html>%s</html>" % userse.dateToSeconds())
 		#Get Content
 		stuff = self.getAllContent()
 
@@ -146,7 +149,31 @@ class MainFeedView(View):
 		return render(request, 'marketapp/feed.html', {'results': stuff,'notsignedinchunk': ns})#,'signinlink': mark_safe('<a href="login">login here</a>')})
 
 
-class adminView(View):
+
+class BuyView(View):
+	def dispatch(self, request, *args, **kwargs):
+		if (request.method == 'GET'):
+			p = request.GET.get('item','')
+			if ( p != ''):
+				try:
+					p = productModel.objects.get(pk=int(p))
+				except:
+					return HttpResponse("<html>Object doesnt exsist</html>")
+			#item = []
+			#item.append(p)
+			return render(request, 'marketapp/buyit.html', {'item': p})
+		elif ( request.method == 'POST'):
+			p = request.POST['item']
+			return HttpResponse("<html>%s</html>" % p)
+			try:
+				p = productModel.objects.get(pk=int(p))
+			except:
+				return HttpResponse("<html>Object doesnt exsist</html>")
+			p.delete()
+			return HttpResponse("<html>THINGY bought!</html>")
+			
+
+class AdminView(View):
 	#for debug purpose shold be in models.py
 	def getAllContent(self):
 		stuff = productModel.objects.all()

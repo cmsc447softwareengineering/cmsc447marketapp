@@ -143,7 +143,6 @@ class userSession(models.Model):
 		self.save()
 		return 1
 
-
 	def checkLogin(self):
 		try:
 			w = userSession.objects.get(umbc_id = self.umbc_id)
@@ -156,10 +155,13 @@ class userSession(models.Model):
 		if (str(w.token) == str(self.token)):
 			return 1
 		#TODO figure out how to check for old session
-		#	if( not (datetime.datetime.now() - w.created > datetime.timedelta(days=1))) 
-		#		return 1
-		#	return 0
-		return "looked up " + str(w.token) + ' checked with ' + str(self.token)
+		#if( not (datetime.datetime.now() - w.created > datetime.timedelta(days=1))) 
+		#	return 1
+		#return 0
+		#return "looked up " + str(w.token) + ' checked with ' + str(self.token)
+
+	def dateToSeconds(self):
+		return datetime.datetime.now(USE_TZ=True) - self.created
 
 	def __str__(self):
 		return "UmbcId: " + self.umbc_id + ' Token: ' + self.token + ' Time created: ' + str(self.created)

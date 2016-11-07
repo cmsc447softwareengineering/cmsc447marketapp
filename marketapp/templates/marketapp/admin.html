@@ -1,0 +1,29 @@
+<html>
+<h1>Umbc Retreiver Market</h1>
+<a href="createuser">Signup here</a>
+<div>
+{{ notsignedinchunk }}
+</div>
+<div>
+{{ signedinchunk }}
+</div>
+<table>
+<tr>
+<th>Title</th><th>Description</th><th>Price</th><th>Poster</th>
+</tr>
+{%for r in results%}
+<tr>
+<td>{{r.title}}</td>
+<td>{{r.description}}</td>
+<td>{{r.price}}</td>
+<td>{{r.owner}}</td>
+<td>
+<form method="post" action="/admin/">
+{% csrf_token %}
+<input type="submit" name="item" value="{{r.id}}">
+</form>
+</td>
+</tr>
+{% endfor %}
+</table>
+</html>

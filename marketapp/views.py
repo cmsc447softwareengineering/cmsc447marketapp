@@ -18,9 +18,10 @@ from django.utils.html import mark_safe
 from django.template.loader import render_to_string
 #from django.core.exceptions import MultiValueDictKeyError
 
-#TODO implement Logout, delete entries, admin system
+#TODO implement delete entries, admin system
 #TODO transaction verification system
 #TODO Buying functionality 
+
 
 class HomePageView(View):
 
@@ -90,9 +91,9 @@ class MainFeedView(View):
 		return stuff
 	
 	def dispatch(self, request, *args, **kwargs):
-		userse = userSession.objects.get(pk='aa12345')
+		#userse = userSession.objects.get(pk='aa12345')
 		
-		return HttpResponse("<html>%s</html>" % userse.dateToSeconds())
+		#return HttpResponse("<html>%s</html>" % userse.checkTime())
 		#Get Content
 		stuff = self.getAllContent()
 
@@ -102,9 +103,9 @@ class MainFeedView(View):
 		except:
 			#If no cookie present they're not logged in
 			ns = render_to_string('a.html')
-			return render(request, 'marketapp/feed.html', {'results': stuff, 'notsignedinchunk': ns})#,'signinlink': mark_safe('<a href="login">login here</a>')})
-		
-		#adding content	
+			return render(request, 'marketapp/feed.html', {'results': stuff, 'notsignedinchunk': ns})
+
+		#Post request..adding content	
 		if (request.method == 'POST'):
 			if (u.checkLogin() == 1):
 				goodform = addGoodForm(request.POST)
@@ -126,9 +127,10 @@ class MainFeedView(View):
 			addform = addGoodForm()
 			si = render_to_string('signedin.html', {'form': addform}, request=request)
 			return render(request, 'marketapp/feed.html', {'results': stuff, 'signedinchunk': si})
-
+		#else its a GET request
 		#If user clicked buy an item load only the item on feed
-		p = request.GET.get('item','')		
+		p = request.GET.get('item','')
+		
 		if ( p != ''):
 			for e in stuff:
 				if int(e.id) == int(p):
@@ -136,6 +138,9 @@ class MainFeedView(View):
 					stuff = []
 					stuff.append(t)
 					break
+		lo = request.GET.get('logout','')	
+		if (lo == 'logout'):
+			u.delete()
 
 
 		#Logged in Get request
@@ -149,7 +154,7 @@ class MainFeedView(View):
 		return render(request, 'marketapp/feed.html', {'results': stuff,'notsignedinchunk': ns})#,'signinlink': mark_safe('<a href="login">login here</a>')})
 
 
-
+#Buy Item page
 class BuyView(View):
 	def dispatch(self, request, *args, **kwargs):
 		if (request.method == 'GET'):
@@ -159,26 +164,41 @@ class BuyView(View):
 					p = productModel.objects.get(pk=int(p))
 				except:
 					return HttpResponse("<html>Object doesnt exsist</html>")
-			#item = []
-			#item.append(p)
 			return render(request, 'marketapp/buyit.html', {'item': p})
 		elif ( request.method == 'POST'):
+			try:
+				u = userSession(umbc_id=request.session['id'], token=request.session['token'])
+				#Verify User is logged in when trying to buy
+				if (u.checkLogin() != 1):
+					return HttpResponse("<html>Please sign in!</html>")
+			except:
+				return HttpResponse("<html>Please sign in!</html>")
 			p = request.POST['item']
-			return HttpResponse("<html>%s</html>" % p)
+
 			try:
 				p = productModel.objects.get(pk=int(p))
 			except:
 				return HttpResponse("<html>Object doesnt exsist</html>")
-			p.delete()
-			return HttpResponse("<html>THINGY bought!</html>")
+			#Bought a service so dont remove from listing
+			if p.goodorservice == False:
+				return HttpResponse("<html>%s</html>" % "Successfully purchased service!")
+			#Bought a Good so remove from listing
+			else:
+				p.delete()
+				return HttpResponse("<html>%s</html>" % "Successfully purchased good!")
+			
+			return HttpResponse("<html>Something went wrong</html>")
 			
 
 class AdminView(View):
+
 	#for debug purpose shold be in models.py
 	def getAllContent(self):
 		stuff = productModel.objects.all()
+		
 	def dispatch(self, request, *args, **kwargs):
-		pass
+		stuff = productModel.objects.all()
+		return render(request, 'marketapp/admin.html', {'results': stuff})
 
 
 			

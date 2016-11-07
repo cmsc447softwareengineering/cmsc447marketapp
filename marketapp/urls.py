@@ -13,7 +13,7 @@ urlpatterns = [ #patterns('',
     # url(r'^$', 'marketapp.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', AdminView.as_view(), name='admin'),
 	url(r'^$', MainFeedView.as_view(), name='home'),
 	url(r'^createuser', CreateUserView.as_view(), name='usercreate'),
 	url(r'^feed', MainFeedView.as_view(), name='feed'),

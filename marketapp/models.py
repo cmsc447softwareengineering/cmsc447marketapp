@@ -11,9 +11,40 @@ p = re.compile('[A-Z][A-Z][0-9][0-9][0-9][0-9][0-9]')
 class adminModel(models.Model):
 	email = models.CharField(max_length=64)
 	password = models.CharField(max_length=64)
+	def createEntry(self):
+		self.clean()
+		existStatus= self.checkUserExists()
+		idValid = self.checkIdisValid()
+		if( not existStatus and idValid):
+			self.verified = True
+			self.save()
+			return 1#UserCreated!
+		else:
+			return 0
+
+	def checkUserExists(self):
+		ErrorMsg = ""
+		try:
+			adminModel.objects.get(email = self.email)
+		except ObjectDoesNotExist:
+			return False #User doesnt exist 
+		except:
+			return True	
+		#Otherwise useralready exsists
+		return True
+
+	def checkPassword(self):
+		try:
+			if( adminModel.objects.get(email = self.email).password == self.password):
+				return True
+			else:
+				return False
+		except:
+			pass
+
+
 	def __str__(self):
 		return "Email: " + self.email + ' Password: ' + self.password 
-
 
 ###############################################################
 class userModel(models.Model):
@@ -28,15 +59,16 @@ class userModel(models.Model):
 	def createEntry(self):
 		self.clean()
 		ErrorMsg = ''
-		existStatus, ErrorMsg = self.checkUserExists()
-		idValid, ErrorMsg = self.checkIdisValid()	#Behavior will be wipe the user exists error if id is invalid
+		existStatus = self.checkUserExists()
+		idValid = self.checkIdisValid()	#Behavior will be wipe the user exists error if id is invalid
 													#Which is ok because not valid ID's should never exist 
 		if( not existStatus and idValid):
 			self.verified = True
 			self.save()
 			return 1#UserCreated!
-		else:
-			return ErrorMsg	#UsernotCreated
+		#else:
+		#	return ErrorMsg	#UsernotCreated
+		return 0
 	#TODO implement
 	def deleteEntry(self):
 		pass
@@ -52,39 +84,27 @@ class userModel(models.Model):
 		#			fail_silently=False
 		#		)
 		
-
-#######checkUserExists######################
 	#Verifies ID hasnt already been registered
 	def checkUserExists(self):
 		ErrorMsg = ""
 		try:
 			userModel.objects.get(umbc_id = self.umbc_id)
-		except ObjectDoesNotExist as detail:
-						
-			#return [True, ErrorMsg]
-			ErrorMsg += str(detail)
-			return [False, ErrorMsg] #User doesnt exist 
+		except ObjectDoesNotExist:			
+			return False #User doesnt exist 
 		except:
-			ErrorMsg = "A weird exception occured "
-			return [True, ErrorMsg]
-			
+			return True
 		#Otherwise useralready exsists
-		ErrorMsg += "A User has already been registered with this ID. "
-		return [True, ErrorMsg]
-#######checkUserExists######################
+		return True
 
-#######checkIdisValid#######################
 	def checkIdisValid(self):
 		ErrorMsg = ""
 		s = str(self.umbc_id)
 		s = s.upper()	
 		if(None == re.match(p,s)):
 			ErrorMsg += "The umbcID provided was not valid. "
-			return [False, ErrorMsg]
+			return False
 		else:
-			return [True, ErrorMsg]
-#######checkIdisValid#######################
-
+			return True
 
 	def checkPassword(self):
 		try:
@@ -125,16 +145,12 @@ class productModel(models.Model):
 				' Price: ' + str(self.price) + \
 				' Owner: ' + str(self.owner)
 
-
-
-
-
 ###############################################################
-
 class userSession(models.Model):
 	umbc_id = models.CharField(max_length=7, primary_key=True)
 	token = models.CharField(max_length=64)
 	created = models.DateTimeField(auto_now_add=True)
+
 	def createEntry(self):
 		self.clean()
 		ErrorMsg = ''
@@ -152,11 +168,15 @@ class userSession(models.Model):
 		self.save()
 		return 1
 
+	#Returns true for being logged in
 	def checkTime(self):
-		if timezone.now() > self.created + datetime.timedelta(days=1):
+		try:
+			w = userSession.objects.get(umbc_id = self.umbc_id)
+		except:
+			return False
+		if timezone.now() < w.created + timedelta(days=1):
 			return True
 		return False
-
 
 	def checkLogin(self):
 		try:
@@ -167,12 +187,9 @@ class userSession(models.Model):
 			return "A Value error occured. %s" % detail			
 		except:
 			return "A different error occured."
-		if (str(w.token) == str(self.token)):
+		if (str(w.token) == str(self.token) and self.checkTime()):
 			return 1
-		#if(self.checkTime()): 
-		#	return 1
 		return 0
-
 
 	def logout(self):
 		u = userSession().objects.get(pk=self.umbc_id)
@@ -181,15 +198,36 @@ class userSession(models.Model):
 	def __str__(self):
 		return "UmbcId: " + self.umbc_id + ' Token: ' + self.token + ' Time created: ' + str(self.created)
 	
-
-
 ###############################################################
-
-class adminSession():
+class adminSession(models.Model):
 	email = models.CharField(max_length=64, primary_key=True)
 	token = models.CharField(max_length=64)
 	created = models.DateTimeField(auto_now_add=True)
 
+	def createEntry(self):
+		self.clean()
+		try:
+			w = adminSession.objects.get(email = self.email)
+		except ObjectDoesNotExist as detail:
+			ErrorMsg += str(detail)
+			self.save()
+			return 1
+		except:
+			ErrorMsg += "Different Error occured."
+			return ErrorMsg
+		#delete old entry overwrite with fresher session
+		w.delete()
+		self.save()
+		return 1
+
+	def checkTime(self):
+		try:
+			w = adminSession().objects.get(email = self.umbc_id)
+		except:
+			return False
+		if timezone.now() < self.created + timedelta(minutes=15):
+			return True
+		return False
 
 	def checkLogin(self):
 		try:
@@ -200,16 +238,9 @@ class adminSession():
 			return "A Value error occured. %s" % detail			
 		except:
 			return "A different error occured."
-		if (str(w.token) == str(self.token)):
-			return 1
-		if(checkTime()): 
+		if (str(w.token) == str(self.token) and self.checkTime()):
 			return 1
 		return 0
-
-	def checkTime(self):
-		if timezone.now() > self.created + datetime.timedelta(minutes=15):
-			return True
-		return False
 
 	def __str__(self):
 		return "Email: " + self.email + ' Token: ' + self.token + ' Time created: ' + str(self.created)

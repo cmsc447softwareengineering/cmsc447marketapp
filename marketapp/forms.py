@@ -7,6 +7,10 @@ class SignUpForm(forms.Form):
 	email = forms.CharField(label='email', max_length=64)
 	umbcid = forms.CharField(label='umbcid', max_length=7)
 
+class AdminLoginForm(forms.Form):
+	email = forms.CharField(label='email', max_length=64)
+	password = forms.CharField(label='password',widget=forms.PasswordInput(), max_length=64)
+
 class LoginForm(forms.Form):
 	umbcid = forms.CharField(label='umbcid', max_length=7)
 	password = forms.CharField(label='password',widget=forms.PasswordInput(), max_length=64)

@@ -18,10 +18,13 @@ from django.utils.html import mark_safe
 from django.template.loader import render_to_string
 #from django.core.exceptions import MultiValueDictKeyError
 
-#TODO implement delete entries, admin system
-#TODO transaction verification system
-#TODO Buying functionality 
-
+#TODO admin system
+# Make admin page for pulling listings
+# Redirect to admin sign in if its not signed in
+# Give owner of listing ability to pull posts
+#TODO stored passwords salted
+#TODO Start making frontend look good
+# Get some CSS up
 
 class HomePageView(View):
 
@@ -59,14 +62,14 @@ class LoginView(View):
 			if (form.is_valid()):
 				u = userModel(	umbc_id = request.POST['umbcid'],
 								password = request.POST['password'])
-				if (u.checkUserExists()[0]):
+				if (u.checkUserExists()):
 					if (u.checkPassword()):
 						t = os.urandom(64)
 						tok = t.encode('base-64')
 						usersesh = userSession(umbc_id = request.POST['umbcid'], token = tok)
 						result = usersesh.createEntry()
 						if (result != 1):
-							return HttpResponse("<html>Failed to create session %s</html>"% result)
+							return HttpResponse("<html>Failed to create session %s</html>"% "Either User doesnt exsist or password is wrong")
 						#Else success!
 						request.session['token'] = tok
 						request.session['id'] = u.umbc_id
@@ -87,14 +90,13 @@ class MainFeedView(View):
 	#for debug purpose shold be in models.py
 	def getAllContent(self):
 		stuff = productModel.objects.all()
-
 		return stuff
 	
 	def dispatch(self, request, *args, **kwargs):
 		#userse = userSession.objects.get(pk='aa12345')
-		
 		#return HttpResponse("<html>%s</html>" % userse.checkTime())
 		#Get Content
+		#TODO For special queries and filtering add specialized request here instead of grabbing all entries
 		stuff = self.getAllContent()
 
 		#Get session info
@@ -127,21 +129,11 @@ class MainFeedView(View):
 			addform = addGoodForm()
 			si = render_to_string('signedin.html', {'form': addform}, request=request)
 			return render(request, 'marketapp/feed.html', {'results': stuff, 'signedinchunk': si})
-		#else its a GET request
-		#If user clicked buy an item load only the item on feed
-		p = request.GET.get('item','')
-		
-		if ( p != ''):
-			for e in stuff:
-				if int(e.id) == int(p):
-					t = e
-					stuff = []
-					stuff.append(t)
-					break
+
+		#Check param to logout
 		lo = request.GET.get('logout','')	
 		if (lo == 'logout'):
 			u.delete()
-
 
 		#Logged in Get request
 		if (u.checkLogin() == 1):
@@ -189,14 +181,17 @@ class BuyView(View):
 			
 			return HttpResponse("<html>Something went wrong</html>")
 			
-
 class AdminView(View):
 
-	#for debug purpose shold be in models.py
-	def getAllContent(self):
-		stuff = productModel.objects.all()
-		
 	def dispatch(self, request, *args, **kwargs):
+		#try:
+		#	a = adminSession(email=request.session['email'], token=request.session['token'])
+		#	if (a.checkLogin() != 1):
+				#form = AdminLoginform()
+				#return render(request, 'marketapp/login.html', {'form' : form})
+		#except:
+		#	pass
+
 		stuff = productModel.objects.all()
 		return render(request, 'marketapp/admin.html', {'results': stuff})
 

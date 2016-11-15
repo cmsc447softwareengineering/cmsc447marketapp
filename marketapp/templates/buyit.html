@@ -1,0 +1,14 @@
+<html>
+<div>
+</div>
+<tr>
+<td>{{ item.title }}</td>
+<td>{{ item.description }}</td>
+<td>{{ item.price }}</td>
+<td>{{ item.owner }}</td>
+<td>
+<form method="post" action="/buyit">
+{% csrf_token %}
+<input type="submit" name="item" value="{{item.id}}">
+</form>
+</html>
